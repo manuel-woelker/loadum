@@ -1,0 +1,13 @@
+[package]
+name = "loadum"
+version = "0.1.0"
+edition = "2024"
+description = "Loading and dumping structured data formats - base crate"
+license = "Apache-2.0"
+
+[dependencies]
+anyhow = "1.0.98"
+
+[lints.clippy]
+# Causes false positives on context! macro
+redundant_closure = "allow"
