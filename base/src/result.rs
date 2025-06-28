@@ -1,32 +1,32 @@
-use crate::error::DocsmithError;
+use crate::error::LoadumError;
 
-pub type DocsmithResult<T> = Result<T, DocsmithError>;
+pub type LoadumResult<T> = Result<T, LoadumError>;
 
 #[macro_export]
 macro_rules! context {
     ($fmt:expr $(, $($args:expr),+)? => $($stmts:stmt)+) => {
         (|| {
             $($stmts)+
-        })().map_err(|e| $crate::error::DocsmithError::from(e).context(format!(concat!("Failed to ",$fmt) $(, $($args),+)?)))
+        })().map_err(|e| $crate::error::LoadumError::from(e).context(format!(concat!("Failed to ",$fmt) $(, $($args),+)?)))
     };
 }
 
 #[cfg(test)]
 mod tests {
     use crate::context;
-    use crate::error::{DocsmithError, bail};
-    use crate::result::DocsmithResult;
+    use crate::error::{LoadumError, bail};
+    use crate::result::LoadumResult;
     use std::env::set_var;
     use std::num::ParseFloatError;
     use std::str::FromStr;
 
     #[test]
     fn test_without_macro() {
-        let result: DocsmithResult<u32> = (|| {
+        let result: LoadumResult<u32> = (|| {
             bail!("foo");
             //Err(std::io::Error::new(std::io::ErrorKind::NotFound, "foo"))
         })()
-        .map_err(|e| DocsmithError::from(e).context("bar"));
+        .map_err(|e| LoadumError::from(e).context("bar"));
         let _err = result.unwrap_err();
         //println!("Error: {:?}", _err);
     }
@@ -44,7 +44,7 @@ mod tests {
     #[test]
     fn test_context_macro_err() {
         unsafe { set_var("RUST_BACKTRACE", "1") };
-        fn my_broken_function() -> DocsmithResult<u32> {
+        fn my_broken_function() -> LoadumResult<u32> {
             bail!("ungrokkable");
         }
         let result = {

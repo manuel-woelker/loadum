@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["base"]
+members = ["base", "json"]
 
 
 [profile.dev.package."*"]
