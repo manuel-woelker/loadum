@@ -125,7 +125,7 @@ macro_rules! assert_state {
     };
 }
 
-impl<'write> Dumper for JsonDumper<'write> {
+impl Dumper for JsonDumper<'_> {
     fn emit(&mut self, event: &Event) -> LoadumResult<()> {
         match event {
             Event::DocumentStart => {
