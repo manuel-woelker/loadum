@@ -1,3 +1,4 @@
+use crate::LoadumString;
 use crate::value::Value;
 
 pub enum Event {
@@ -19,14 +20,14 @@ impl Event {
         Event::Literal(Value::Boolean(value))
     }
 
-    pub fn string(s: impl Into<String>) -> Event {
+    pub fn string(s: impl Into<LoadumString>) -> Event {
         Event::Literal(Value::string(s))
     }
     pub fn number(value: impl Into<f64>) -> Event {
         Event::Literal(Value::number(value))
     }
 
-    pub fn map_key(s: impl Into<String>) -> Event {
+    pub fn map_key(s: impl Into<LoadumString>) -> Event {
         Event::MapKey(Value::string(s))
     }
 }
@@ -37,6 +38,6 @@ mod tests {
 
     #[test]
     fn event_size() {
-        assert_eq!(size_of::<Event>(), 24);
+        assert_eq!(size_of::<Event>(), 32);
     }
 }

@@ -7,6 +7,7 @@ license = "Apache-2.0"
 
 [dependencies]
 anyhow = "1.0.98"
+ecow = "0.2.5"
 
 [lints.clippy]
 # Causes false positives on context! macro
