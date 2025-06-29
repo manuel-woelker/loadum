@@ -1,0 +1,11 @@
+[package]
+name = "loadum-yaml"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+loadum = { path = "../base", version = "0.1.0" }
+unscanny = "0.1"
+
+[dev-dependencies]
+expect-test = "1.5.1"
