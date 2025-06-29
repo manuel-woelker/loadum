@@ -1,3 +1,4 @@
+use loadum::LoadumString;
 use loadum::dumper::Dumper;
 use loadum::event::Event;
 use loadum::result::LoadumResult;
@@ -43,7 +44,8 @@ impl<'write> JsonDumper<'write> {
         match value {
             Value::String(s) => {
                 self.write.write_all(b"\"")?;
-                self.write.write_all(s.as_bytes())?;
+                let escaped_string = escape_string(s);
+                self.write.write_all(escaped_string.as_bytes())?;
                 self.write.write_all(b"\"")?;
             }
             Value::Number(i) => {
@@ -196,6 +198,48 @@ impl Dumper for JsonDumper<'_> {
     }
 }
 
+fn escape_string(string: &LoadumString) -> LoadumString {
+    let mut must_escape = false;
+    for c in string.chars() {
+        match c {
+            '\u{0000}'..='\u{001f}' | '"' | '\\' => {
+                must_escape = true;
+                break;
+            }
+            _ => {}
+        }
+    }
+    dbg!(must_escape);
+    if !must_escape {
+        return string.clone();
+    }
+    let mut new_string = LoadumString::with_capacity(string.len() + 1);
+    for c in string.chars() {
+        match c {
+            '"' | '\\' => {
+                new_string.push('\\');
+                new_string.push(c)
+            }
+            '\t' => {
+                new_string.push_str("\\t");
+            }
+            '\n' => {
+                new_string.push_str("\\n");
+            }
+            '\r' => {
+                new_string.push_str("\\r");
+            }
+            '\u{0000}'..='\u{001f}' => {
+                new_string.push('\\');
+                new_string.push('u');
+                new_string.push_str(&format!("{:04x}", c as u32));
+            }
+            _ => new_string.push(c),
+        }
+    }
+    LoadumString::from(new_string)
+}
+
 #[cfg(test)]
 mod tests {
     use super::JsonDumper;
@@ -260,6 +304,40 @@ mod tests {
                 {
                 	"foo": true,
                 	"fizz": false
+                }"#]],
+        );
+    }
+
+    #[test]
+    fn test_string_escapes() {
+        run_test(
+            &[
+                MapStart,
+                Event::map_key("quote"),
+                Event::string("\""),
+                Event::map_key("backslash"),
+                Event::string("\\"),
+                Event::map_key("tab"),
+                Event::string("\t"),
+                Event::map_key("newline"),
+                Event::string("\n"),
+                Event::map_key("control_chars"),
+                Event::string(('\u{0000}'..='\u{001f}').collect::<String>()),
+                Event::map_key("unicode"),
+                Event::string("👨‍👩‍👦‍👦"),
+                Event::map_key("zalgo"),
+                Event::string("ļ̴̞̼̒͂o̸̡̱̗͆ă̷̫͉̗̄͂ḑ̶͚̘͆͂̚u̸͇͂̍̌m̶̫̓̈̈́"),
+                MapEnd,
+            ],
+            expect![[r#"
+                {
+                	"quote": "\"",
+                	"backslash": "\\",
+                	"tab": "\t",
+                	"newline": "\n",
+                	"control_chars": "\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\u0008\t\n\u000b\u000c\r\u000e\u000f\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001a\u001b\u001c\u001d\u001e\u001f",
+                	"unicode": "👨‍👩‍👦‍👦",
+                	"zalgo": "ļ̴̞̼̒͂o̸̡̱̗͆ă̷̫͉̗̄͂ḑ̶͚̘͆͂̚u̸͇͂̍̌m̶̫̓̈̈́"
                 }"#]],
         );
     }
